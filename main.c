@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include "pilha.h"
 
 void menuPilha(void);
 void menuFila(void);
