@@ -1,6 +1,8 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include "pilha.h"
+#include "expressoes.h"
 
 void menuPilha(void);
 void menuFila(void);
@@ -58,6 +60,8 @@ int main(void)
 void menuPilha(void)
 {
     int opcao = 0;
+    char infixa[256];
+    char resultado[512];
 
     do
     {
@@ -80,31 +84,55 @@ void menuPilha(void)
             opcao = -1;
         }
 
+        // Limpa o buffer antes de ler a string com fgets
+        while (getchar() != '\n')
+            ;
+
         switch (opcao)
         {
         case 1:
-            printf("\n[Em desenvolvimento] Infixa -> Posfixa\n");
-            // TODO: Chamar funcao do modulo de pilha/expressoes
+            printf("\nDigite a expressao infixa: ");
+            if (fgets(infixa, sizeof(infixa), stdin) != NULL)
+            {
+                // Remove a quebra de linha do final da string
+                infixa[strcspn(infixa, "\n")] = '\0';
+
+                infixaParaPosfixa(infixa, resultado);
+                printf("\nExpressao Infixa : %s\n", infixa);
+                printf("Expressao Posfixa: %s\n", resultado);
+            }
             pausar();
             break;
+
         case 2:
-            printf("\n[Em desenvolvimento] Infixa -> Prefixa\n");
-            // TODO: Chamar funcao do modulo de pilha/expressoes
+            printf("\nDigite a expressao infixa: ");
+            if (fgets(infixa, sizeof(infixa), stdin) != NULL)
+            {
+                infixa[strcspn(infixa, "\n")] = '\0';
+
+                infixaParaPrefixa(infixa, resultado);
+                printf("\nExpressao Infixa : %s\n", infixa);
+                printf("Expressao Prefixa: %s\n", resultado);
+            }
             pausar();
             break;
+
         case 3:
             printf("\n[Em desenvolvimento] Validação de Expressao\n");
             // TODO: Chamar funcao do modulo de pilha/expressoes
             pausar();
             break;
+
         case 4:
             printf("\n[Em desenvolvimento] Avaliacao de Expressao\n");
             // TODO: Chamar funcao do modulo de pilha/expressoes
             pausar();
             break;
+
         case 5:
             printf("\nVoltando ao menu principal...\n");
             break;
+
         default:
             printf("\nOpcao invalida!\n");
             pausar();
@@ -184,6 +212,6 @@ void pausar(void)
 {
     printf("\nPressione Enter para continuar...");
     while (getchar() != '\n')
-        ;      // Limpa buffer pendente
-    getchar(); // Aguarda a tecla Enter
+        ; // Limpa buffer pendente
+    // getchar(); // Aguarda a tecla Enter
 }
