@@ -3,21 +3,20 @@
 
 #include <stdbool.h>
 
-/* Funções utilitárias de auxílio */
+/* Funções utilitárias */
 int precedencia(char op);
 bool associativoDireita(char op);
 bool eOperador(char c);
 void inverterETrocarParenteses(const char *src, char *dest);
 void inverterString(char *str);
+void sanitizarExpressao(const char *src, char *dest);
 
-/* Função interna de conversão Shunting-yard */
+/* Funções de conversão */
 void infixaParaPosfixaInternal(const char *infixa, char *posfixa, bool ehParaPrefixa);
-
-/* Funções principais de conversão */
 void infixaParaPosfixa(const char *infixa, char *posfixa);
 void infixaParaPrefixa(const char *infixa, char *prefixa);
 
-/* Funções de validação e avaliação matemática */
+/* Funções de validação e avaliação */
 bool validarExpressao(const char *infixa);
 bool avaliarPosfixa(const char *posfixa, double *resultado);
 

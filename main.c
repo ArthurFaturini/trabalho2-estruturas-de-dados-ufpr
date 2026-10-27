@@ -60,8 +60,14 @@ int main(void)
 void menuPilha(void)
 {
     int opcao = 0;
-    char infixa[256];
-    char resultado[512];
+    char infixaBruta[256];
+    char infixaLimpa[256];
+    char resultadoPosfixa[512];
+    char resultadoPrefixa[512];
+
+    /* Matriz/Estrutura para armazenar até 50 expressões em lote */
+    char loteInfixa[50][256];
+    int totalExpressoes = 0;
 
     do
     {
@@ -84,48 +90,133 @@ void menuPilha(void)
             opcao = -1;
         }
 
-        // Limpa o buffer antes de ler a string com fgets
         while (getchar() != '\n')
-            ;
+            ; // Limpa buffer do teclado
 
         switch (opcao)
         {
         case 1:
-            printf("\nDigite a expressao infixa: ");
-            if (fgets(infixa, sizeof(infixa), stdin) != NULL)
+            printf("\n--- CONVERTER PARA POSFIXA ---\n");
+            printf("Digite uma expressao: ");
+            if (fgets(infixaBruta, sizeof(infixaBruta), stdin) != NULL)
             {
-                // Remove a quebra de linha do final da string
-                infixa[strcspn(infixa, "\n")] = '\0';
+                infixaBruta[strcspn(infixaBruta, "\n")] = '\0';
+                sanitizarExpressao(infixaBruta, infixaLimpa);
 
-                infixaParaPosfixa(infixa, resultado);
-                printf("\nExpressao Infixa : %s\n", infixa);
-                printf("Expressao Posfixa: %s\n", resultado);
+                if (!validarExpressao(infixaLimpa))
+                {
+                    printf("\nErro: A expressao fornecida eh INVALIDA!\n");
+                }
+                else
+                {
+                    infixaParaPosfixa(infixaLimpa, resultadoPosfixa);
+                    printf("\nExpressao Entrada : %s\n", infixaBruta);
+                    printf("Expressao Processada: %s\n", infixaLimpa);
+                    printf("Expressao Posfixa  : %s\n", resultadoPosfixa);
+                }
             }
             pausar();
             break;
 
         case 2:
-            printf("\nDigite a expressao infixa: ");
-            if (fgets(infixa, sizeof(infixa), stdin) != NULL)
+            printf("\n--- CONVERTER PARA PREFIXA ---\n");
+            printf("Digite uma expressao: ");
+            if (fgets(infixaBruta, sizeof(infixaBruta), stdin) != NULL)
             {
-                infixa[strcspn(infixa, "\n")] = '\0';
+                infixaBruta[strcspn(infixaBruta, "\n")] = '\0';
+                sanitizarExpressao(infixaBruta, infixaLimpa);
 
-                infixaParaPrefixa(infixa, resultado);
-                printf("\nExpressao Infixa : %s\n", infixa);
-                printf("Expressao Prefixa: %s\n", resultado);
+                if (!validarExpressao(infixaLimpa))
+                {
+                    printf("\nErro: A expressao fornecida eh INVALIDA!\n");
+                }
+                else
+                {
+                    infixaParaPrefixa(infixaLimpa, resultadoPrefixa);
+                    printf("\nExpressao Entrada : %s\n", infixaBruta);
+                    printf("Expressao Processada: %s\n", infixaLimpa);
+                    printf("Expressao Prefixa  : %s\n", resultadoPrefixa);
+                }
             }
             pausar();
             break;
 
         case 3:
-            printf("\n[Em desenvolvimento] Validação de Expressao\n");
-            // TODO: Chamar funcao do modulo de pilha/expressoes
+            printf("\n--- VERIFICAR VALIDADE ---\n");
+            printf("Digite a expressao para validar: ");
+            if (fgets(infixaBruta, sizeof(infixaBruta), stdin) != NULL)
+            {
+                infixaBruta[strcspn(infixaBruta, "\n")] = '\0';
+                sanitizarExpressao(infixaBruta, infixaLimpa);
+
+                if (validarExpressao(infixaLimpa))
+                {
+                    printf("\nResultado: A expressao '%s' eh VALIDA!\n", infixaBruta);
+                }
+                else
+                {
+                    printf("\nResultado: A expressao '%s' eh INVALIDA!\n", infixaBruta);
+                }
+            }
             pausar();
             break;
 
         case 4:
-            printf("\n[Em desenvolvimento] Avaliacao de Expressao\n");
-            // TODO: Chamar funcao do modulo de pilha/expressoes
+            printf("\n--- CALCULAR RESULTADO DE EXPRESSOES (ENTRADA EM LOTE) ---\n");
+            printf("Digite quantas expressoes desejar. Para encerrar as entradas, digite 'FIM' ou pressione Enter em linha vazia.\n\n");
+
+            totalExpressoes = 0;
+            while (totalExpressoes < 50)
+            {
+                printf("Expressao #%d: ", totalExpressoes + 1);
+                if (fgets(infixaBruta, sizeof(infixaBruta), stdin) == NULL)
+                    break;
+
+                infixaBruta[strcspn(infixaBruta, "\n")] = '\0';
+
+                /* Flag de parada: digitar 'FIM', 'fim' ou dar Enter vazio */
+                if (strlen(infixaBruta) == 0 || strcasecmp(infixaBruta, "FIM") == 0)
+                {
+                    break;
+                }
+
+                strcpy(loteInfixa[totalExpressoes], infixaBruta);
+                totalExpressoes++;
+            }
+
+            if (totalExpressoes == 0)
+            {
+                printf("\nNenhuma expressao foi digitada.\n");
+            }
+            else
+            {
+                printf("\n=======================================================\n");
+                printf("          RESULTADOS DAS EXPRESSOES PROCESSADAS        \n");
+                printf("=======================================================\n");
+
+                for (int i = 0; i < totalExpressoes; i++)
+                {
+                    sanitizarExpressao(loteInfixa[i], infixaLimpa);
+
+                    printf("\n[%d] Expressao Entrada: %s\n", i + 1, loteInfixa[i]);
+
+                    if (!validarExpressao(infixaLimpa))
+                    {
+                        printf("    Status: INVALIDA (Nao foi possivel calcular)\n");
+                    }
+                    else
+                    {
+                        infixaParaPosfixa(infixaLimpa, resultadoPosfixa);
+                        double valFinal = 0.0;
+                        if (avaliarPosfixa(resultadoPosfixa, &valFinal))
+                        {
+                            printf("    Posfixa : %s\n", resultadoPosfixa);
+                            printf("    Resultado: %.2f\n", valFinal);
+                        }
+                    }
+                }
+                printf("=======================================================\n");
+            }
             pausar();
             break;
 

@@ -84,26 +84,44 @@ void infixaParaPosfixaInternal(const char *infixa, char *posfixa, bool ehParaPre
 
     int i = 0, k = 0;
     int len = strlen(infixa);
+    bool proximoPodeSerUnario = true; // Início da string pode ser unário
 
     while (i < len)
     {
         char c = infixa[i];
 
-        // Ignora espaços em branco
         if (isspace(c))
         {
             i++;
             continue;
         }
 
-        // Se for operando (dígito, letra ou ponto decimal de número real)
+        /* TRATAMENTO DE NÚMEROS NEGATIVOS UNÁRIOS: ex (-25 ou -11 no início */
+        if ((c == '-' || c == '+') && proximoPodeSerUnario && (i + 1 < len) && (isdigit(infixa[i + 1]) || infixa[i + 1] == '.'))
+        {
+            if (c == '-')
+            {
+                posfixa[k++] = '-'; // Anexa o sinal direto no número
+            }
+            i++;
+            while (i < len && (isalnum(infixa[i]) || infixa[i] == '.'))
+            {
+                posfixa[k++] = infixa[i++];
+            }
+            posfixa[k++] = ' ';
+            proximoPodeSerUnario = false;
+            continue;
+        }
+
+        // Se for operando positivo (dígito, letra ou ponto decimal)
         if (isalnum(c) || c == '.')
         {
             while (i < len && (isalnum(infixa[i]) || infixa[i] == '.'))
             {
                 posfixa[k++] = infixa[i++];
             }
-            posfixa[k++] = ' '; // Espaço delimitador
+            posfixa[k++] = ' ';
+            proximoPodeSerUnario = false;
             continue;
         }
 
@@ -111,6 +129,7 @@ void infixaParaPosfixaInternal(const char *infixa, char *posfixa, bool ehParaPre
         if (c == '(')
         {
             pushChar(&p, c);
+            proximoPodeSerUnario = true; // Após '(', o próximo símbolo pode ser unário
         }
         // Parêntese de fecho
         else if (c == ')')
@@ -122,9 +141,10 @@ void infixaParaPosfixaInternal(const char *infixa, char *posfixa, bool ehParaPre
                 posfixa[k++] = topoOp;
                 posfixa[k++] = ' ';
             }
-            popChar(&p, &topoOp); // Remove o '(' da pilha
+            popChar(&p, &topoOp);
+            proximoPodeSerUnario = false;
         }
-        // Se for um operador aritmético
+        // Se for operador binário
         else if (eOperador(c))
         {
             char topoOp;
@@ -137,7 +157,6 @@ void infixaParaPosfixaInternal(const char *infixa, char *posfixa, bool ehParaPre
 
                 if (ehParaPrefixa)
                 {
-                    // Na Pré-fixa (string invertida), a associatividade do '^' inverte
                     if (associativoDireita(c))
                     {
                         desempilhar = (precC <= precTopo);
@@ -149,7 +168,6 @@ void infixaParaPosfixaInternal(const char *infixa, char *posfixa, bool ehParaPre
                 }
                 else
                 {
-                    // Pós-fixa padrão
                     if (associativoDireita(c))
                     {
                         desempilhar = (precC < precTopo);
@@ -172,11 +190,11 @@ void infixaParaPosfixaInternal(const char *infixa, char *posfixa, bool ehParaPre
                 }
             }
             pushChar(&p, c);
+            proximoPodeSerUnario = true; // Após um operador binário, pode vir unário
         }
         i++;
     }
 
-    // Desempilha operadores restantes
     char topoOp;
     while (!isEmpty(&p))
     {
@@ -188,7 +206,6 @@ void infixaParaPosfixaInternal(const char *infixa, char *posfixa, bool ehParaPre
         }
     }
 
-    // Remove espaço em branco residual no final
     if (k > 0 && posfixa[k - 1] == ' ')
     {
         k--;
@@ -238,7 +255,43 @@ void infixaParaPrefixa(const char *infixa, char *prefixa)
 }
 
 /*
- * Valida o balanceamento de parênteses e estrutura da expressão
+ * Remove tudo após '=' e normaliza símbolos do edital (÷, ·, {}, [])
+ */
+void sanitizarExpressao(const char *src, char *dest)
+{
+    int i = 0, k = 0;
+    while (src[i] != '\0')
+    {
+        if (src[i] == '=')
+            break; // Descarta tudo após o '='
+
+        if (src[i] == '{' || src[i] == '[')
+        {
+            dest[k++] = '(';
+        }
+        else if (src[i] == '}' || src[i] == ']')
+        {
+            dest[k++] = ')';
+        }
+        else if ((unsigned char)src[i] == 0xF7 || src[i] == ':')
+        {
+            dest[k++] = '/';
+        }
+        else if (src[i] == '.' && (i == 0 || !isdigit(src[i - 1])) && !isdigit(src[i + 1]))
+        {
+            dest[k++] = '*'; // Ponto isolado usado como multiplicação (ex: 3 . 2)
+        }
+        else
+        {
+            dest[k++] = src[i];
+        }
+        i++;
+    }
+    dest[k] = '\0';
+}
+
+/*
+ * Valida parênteses e estrutura da expressão
  */
 bool validarExpressao(const char *infixa)
 {
@@ -246,7 +299,7 @@ bool validarExpressao(const char *infixa)
     inicializarPilha(&p);
 
     int len = strlen(infixa);
-    bool ultimoFoiOperador = true;
+    bool ultimoFoiOperador = true; // No início, permite unário
     int qtdOperandos = 0;
 
     for (int i = 0; i < len; i++)
@@ -259,7 +312,7 @@ bool validarExpressao(const char *infixa)
         if (c == '(')
         {
             pushChar(&p, c);
-            ultimoFoiOperador = true;
+            ultimoFoiOperador = true; // Após '(', permite operador unário (ex: (-25)
         }
         else if (c == ')')
         {
@@ -267,7 +320,7 @@ bool validarExpressao(const char *infixa)
             if (!popChar(&p, &temp))
             {
                 liberarPilha(&p);
-                return false;
+                return false; // Fecha parêntese sem abertura
             }
             ultimoFoiOperador = false;
         }
@@ -283,21 +336,25 @@ bool validarExpressao(const char *infixa)
         }
         else if (eOperador(c))
         {
-            if (c == '-' && ultimoFoiOperador)
+            /* PERMISSÃO DE UNÁRIO: se for '-' ou '+' no início ou após '(', é um sinal unário */
+            if ((c == '-' || c == '+') && ultimoFoiOperador)
             {
-                // Tratamento de sinal negativo
+                // É um operador unário válido, mantém ultimoFoiOperador como true
             }
             else if (ultimoFoiOperador)
             {
                 liberarPilha(&p);
-                return false;
+                return false; // Dois operadores binários seguidos (ex: 2 ++ 3)
             }
-            ultimoFoiOperador = true;
+            else
+            {
+                ultimoFoiOperador = true;
+            }
         }
         else
         {
             liberarPilha(&p);
-            return false;
+            return false; // Caractere inválido
         }
     }
 
@@ -313,7 +370,7 @@ bool validarExpressao(const char *infixa)
 }
 
 /*
- * Avalia numericamente a expressão pós-fixa
+ * Calcula numericamente a expressão pós-fixa usando a Pilha
  */
 bool avaliarPosfixa(const char *posfixa, double *resultado)
 {
@@ -333,6 +390,7 @@ bool avaliarPosfixa(const char *posfixa, double *resultado)
             continue;
         }
 
+        // Se for número (inteiro ou real)
         if (isdigit(c) || c == '.' || (c == '-' && isdigit(posfixa[i + 1])))
         {
             char *endptr;
@@ -342,6 +400,7 @@ bool avaliarPosfixa(const char *posfixa, double *resultado)
             continue;
         }
 
+        // Se for operador
         if (eOperador(c))
         {
             double op2, op1;
