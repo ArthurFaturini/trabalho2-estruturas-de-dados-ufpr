@@ -3,6 +3,13 @@
 
 #include <stdbool.h>
 
+/* Nó para a Lista Encadeada de Expressões em Lote */
+typedef struct NoExpressao
+{
+    char expressao[256];
+    struct NoExpressao *prox;
+} NoExpressao;
+
 /* Funções utilitárias */
 int precedencia(char op);
 bool associativoDireita(char op);
@@ -19,5 +26,9 @@ void infixaParaPrefixa(const char *infixa, char *prefixa);
 /* Funções de validação e avaliação */
 bool validarExpressao(const char *infixa);
 bool avaliarPosfixa(const char *posfixa, double *resultado);
+
+/* Funções para gerenciar a lista de expressões */
+void inserirExpressao(NoExpressao **lista, const char *expr);
+void liberarListaExpressoes(NoExpressao *lista);
 
 #endif // EXPRESSOES_H

@@ -25,11 +25,10 @@ int main(void)
         printf("===========================================\n");
         printf("Escolha uma opcao: ");
 
-        if (scanf("%d", &opcao) != 1)
+        if (scanf("%d", &opcao) == 1)
         {
             while (getchar() != '\n')
-                ; // Limpa o buffer em caso de entrada invalida
-            opcao = -1;
+                ; // Limpa o \n para nao vazar para a menuPilha()
         }
 
         switch (opcao)
@@ -59,26 +58,58 @@ int main(void)
  * ======================================================= */
 void menuPilha(void)
 {
-    int opcao = 0;
-    char infixaBruta[256];
+    NoExpressao *listaExpressoes = NULL;
+    char bufferEntrada[256];
     char infixaLimpa[256];
     char resultadoPosfixa[512];
     char resultadoPrefixa[512];
+    int opcao = 0;
 
-    /* Matriz/Estrutura para armazenar até 50 expressões em lote */
-    char loteInfixa[50][256];
-    int totalExpressoes = 0;
+    limparTela();
+    printf("=======================================================\n");
+    printf("     ENTRADA DE EXPRESSOES (MODULO PILHA)             \n");
+    printf("=======================================================\n");
+    printf("Digite as expressoes que deseja processar.\n");
+    printf("Para encerrar e ir para o menu, digite 'FIM' ou aperte Enter.\n\n");
 
+    int contador = 1;
+    while (1)
+    {
+        printf("Expressao #%d: ", contador);
+        if (fgets(bufferEntrada, sizeof(bufferEntrada), stdin) == NULL)
+            break;
+
+        bufferEntrada[strcspn(bufferEntrada, "\n")] = '\0';
+
+        /* Flag de parada */
+        if (strlen(bufferEntrada) == 0 || strcasecmp(bufferEntrada, "FIM") == 0)
+        {
+            break;
+        }
+
+        inserirExpressao(&listaExpressoes, bufferEntrada);
+        contador++;
+    }
+
+    /* Se o usuário não digitou nenhuma expressão, avisa e retorna */
+    if (listaExpressoes == NULL)
+    {
+        printf("\nNenhuma expressao inserida. Retornando...\n");
+        pausar();
+        return;
+    }
+
+    /* LOOP DO MENU PRINCIPAL DE OPERACOES */
     do
     {
         limparTela();
         printf("-------------------------------------------\n");
         printf("      APLICACAO A: EXPRESSOES (PILHA)\n");
         printf("-------------------------------------------\n");
-        printf("1. Transformar Infixa em Posfixa\n");
-        printf("2. Transformar Infixa em Prefixa\n");
-        printf("3. Verificar validade de uma expressao\n");
-        printf("4. Calcular resultado de expressoes\n");
+        printf("1. Transformar Infixa em Posfixa (Todas)\n");
+        printf("2. Transformar Infixa em Prefixa (Todas)\n");
+        printf("3. Verificar validade de expressoes (Todas)\n");
+        printf("4. Calcular resultado de expressoes (Todas)\n");
         printf("5. Voltar ao Menu Principal\n");
         printf("-------------------------------------------\n");
         printf("Escolha uma opcao: ");
@@ -91,118 +122,90 @@ void menuPilha(void)
         }
 
         while (getchar() != '\n')
-            ; // Limpa buffer do teclado
+            ; // Limpa buffer
 
         switch (opcao)
         {
         case 1:
-            printf("\n--- CONVERTER PARA POSFIXA ---\n");
-            printf("Digite uma expressao: ");
-            if (fgets(infixaBruta, sizeof(infixaBruta), stdin) != NULL)
+            printf("\n--- CONVERSAO PARA POSFIXA ---\n");
             {
-                infixaBruta[strcspn(infixaBruta, "\n")] = '\0';
-                sanitizarExpressao(infixaBruta, infixaLimpa);
+                NoExpressao *curr = listaExpressoes;
+                int idx = 1;
+                while (curr != NULL)
+                {
+                    sanitizarExpressao(curr->expressao, infixaLimpa);
+                    printf("\n[%d] Entrada : %s\n", idx++, curr->expressao);
 
-                if (!validarExpressao(infixaLimpa))
-                {
-                    printf("\nErro: A expressao fornecida eh INVALIDA!\n");
-                }
-                else
-                {
-                    infixaParaPosfixa(infixaLimpa, resultadoPosfixa);
-                    printf("\nExpressao Entrada : %s\n", infixaBruta);
-                    printf("Expressao Processada: %s\n", infixaLimpa);
-                    printf("Expressao Posfixa  : %s\n", resultadoPosfixa);
+                    if (!validarExpressao(infixaLimpa))
+                    {
+                        printf("    Status  : INVALIDA!\n");
+                    }
+                    else
+                    {
+                        infixaParaPosfixa(infixaLimpa, resultadoPosfixa);
+                        printf("    Posfixa : %s\n", resultadoPosfixa);
+                    }
+                    curr = curr->prox;
                 }
             }
             pausar();
             break;
 
         case 2:
-            printf("\n--- CONVERTER PARA PREFIXA ---\n");
-            printf("Digite uma expressao: ");
-            if (fgets(infixaBruta, sizeof(infixaBruta), stdin) != NULL)
+            printf("\n--- CONVERSAO PARA PREFIXA ---\n");
             {
-                infixaBruta[strcspn(infixaBruta, "\n")] = '\0';
-                sanitizarExpressao(infixaBruta, infixaLimpa);
+                NoExpressao *curr = listaExpressoes;
+                int idx = 1;
+                while (curr != NULL)
+                {
+                    sanitizarExpressao(curr->expressao, infixaLimpa);
+                    printf("\n[%d] Entrada : %s\n", idx++, curr->expressao);
 
-                if (!validarExpressao(infixaLimpa))
-                {
-                    printf("\nErro: A expressao fornecida eh INVALIDA!\n");
-                }
-                else
-                {
-                    infixaParaPrefixa(infixaLimpa, resultadoPrefixa);
-                    printf("\nExpressao Entrada : %s\n", infixaBruta);
-                    printf("Expressao Processada: %s\n", infixaLimpa);
-                    printf("Expressao Prefixa  : %s\n", resultadoPrefixa);
+                    if (!validarExpressao(infixaLimpa))
+                    {
+                        printf("    Status  : INVALIDA!\n");
+                    }
+                    else
+                    {
+                        infixaParaPrefixa(infixaLimpa, resultadoPrefixa);
+                        printf("    Prefixa : %s\n", resultadoPrefixa);
+                    }
+                    curr = curr->prox;
                 }
             }
             pausar();
             break;
 
         case 3:
-            printf("\n--- VERIFICAR VALIDADE ---\n");
-            printf("Digite a expressao para validar: ");
-            if (fgets(infixaBruta, sizeof(infixaBruta), stdin) != NULL)
+            printf("\n--- VERIFICACAO DE VALIDADE ---\n");
             {
-                infixaBruta[strcspn(infixaBruta, "\n")] = '\0';
-                sanitizarExpressao(infixaBruta, infixaLimpa);
-
-                if (validarExpressao(infixaLimpa))
+                NoExpressao *curr = listaExpressoes;
+                int idx = 1;
+                while (curr != NULL)
                 {
-                    printf("\nResultado: A expressao '%s' eh VALIDA!\n", infixaBruta);
-                }
-                else
-                {
-                    printf("\nResultado: A expressao '%s' eh INVALIDA!\n", infixaBruta);
+                    sanitizarExpressao(curr->expressao, infixaLimpa);
+                    bool valida = validarExpressao(infixaLimpa);
+                    printf("[%d] Expressao: %-30s -> %s\n",
+                           idx++, curr->expressao, valida ? "VALIDA" : "INVALIDA");
+                    curr = curr->prox;
                 }
             }
             pausar();
             break;
 
         case 4:
-            printf("\n--- CALCULAR RESULTADO DE EXPRESSOES (ENTRADA EM LOTE) ---\n");
-            printf("Digite quantas expressoes desejar. Para encerrar as entradas, digite 'FIM' ou pressione Enter em linha vazia.\n\n");
-
-            totalExpressoes = 0;
-            while (totalExpressoes < 50)
+            printf("\n--- AVALIACAO E CALCULO MATEMATICO ---\n");
             {
-                printf("Expressao #%d: ", totalExpressoes + 1);
-                if (fgets(infixaBruta, sizeof(infixaBruta), stdin) == NULL)
-                    break;
-
-                infixaBruta[strcspn(infixaBruta, "\n")] = '\0';
-
-                /* Flag de parada: digitar 'FIM', 'fim' ou dar Enter vazio */
-                if (strlen(infixaBruta) == 0 || strcasecmp(infixaBruta, "FIM") == 0)
+                NoExpressao *curr = listaExpressoes;
+                int idx = 1;
+                while (curr != NULL)
                 {
-                    break;
-                }
-
-                strcpy(loteInfixa[totalExpressoes], infixaBruta);
-                totalExpressoes++;
-            }
-
-            if (totalExpressoes == 0)
-            {
-                printf("\nNenhuma expressao foi digitada.\n");
-            }
-            else
-            {
-                printf("\n=======================================================\n");
-                printf("          RESULTADOS DAS EXPRESSOES PROCESSADAS        \n");
-                printf("=======================================================\n");
-
-                for (int i = 0; i < totalExpressoes; i++)
-                {
-                    sanitizarExpressao(loteInfixa[i], infixaLimpa);
-
-                    printf("\n[%d] Expressao Entrada: %s\n", i + 1, loteInfixa[i]);
+                    sanitizarExpressao(curr->expressao, infixaLimpa);
+                    printf("\n[%d] Expressao: %s\n", idx++, curr->expressao);
 
                     if (!validarExpressao(infixaLimpa))
                     {
-                        printf("    Status: INVALIDA (Nao foi possivel calcular)\n");
+                        printf("    Erro: Expressao sintaticamente invalida.\n");
                     }
                     else
                     {
@@ -210,18 +213,19 @@ void menuPilha(void)
                         double valFinal = 0.0;
                         if (avaliarPosfixa(resultadoPosfixa, &valFinal))
                         {
-                            printf("    Posfixa : %s\n", resultadoPosfixa);
+                            printf("    Posfixa  : %s\n", resultadoPosfixa);
                             printf("    Resultado: %.2f\n", valFinal);
                         }
                     }
+                    curr = curr->prox;
                 }
-                printf("=======================================================\n");
             }
             pausar();
             break;
 
         case 5:
-            printf("\nVoltando ao menu principal...\n");
+            printf("\nLiberando lista de expressoes e voltando...\n");
+            liberarListaExpressoes(listaExpressoes);
             break;
 
         default:

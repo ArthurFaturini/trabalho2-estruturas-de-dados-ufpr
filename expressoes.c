@@ -299,7 +299,7 @@ bool validarExpressao(const char *infixa)
     inicializarPilha(&p);
 
     int len = strlen(infixa);
-    bool ultimoFoiOperador = true; // No início, permite unário
+    bool ultimoFoiOperador = true;
     int qtdOperandos = 0;
 
     for (int i = 0; i < len; i++)
@@ -311,21 +311,49 @@ bool validarExpressao(const char *infixa)
 
         if (c == '(')
         {
+            /* Se o elemento anterior era um operando (ex: "9 (") ou um ')', a sintaxe é inválida! */
+            if (!ultimoFoiOperador)
+            {
+                liberarPilha(&p);
+                return false;
+            }
+
             pushChar(&p, c);
-            ultimoFoiOperador = true; // Após '(', permite operador unário (ex: (-25)
+            ultimoFoiOperador = true;
         }
         else if (c == ')')
         {
+            /* Não pode ter parêntese vazio "()" ou operador logo antes de ')' */
+            if (ultimoFoiOperador)
+            {
+                liberarPilha(&p);
+                return false;
+            }
+
             char temp;
             if (!popChar(&p, &temp))
             {
                 liberarPilha(&p);
-                return false; // Fecha parêntese sem abertura
+                return false; // Parêntese fechado sem abertura correspondente
             }
             ultimoFoiOperador = false;
         }
         else if (isalnum(c) || c == '.')
         {
+            /* Se o elemento anterior foi um parêntese de fecho sem operador (ex: ") 9"), é inválido */
+            if (!ultimoFoiOperador && i > 0)
+            {
+                // Checa se o caractere anterior que não era espaço era ')'
+                int j = i - 1;
+                while (j >= 0 && isspace(infixa[j]))
+                    j--;
+                if (j >= 0 && infixa[j] == ')')
+                {
+                    liberarPilha(&p);
+                    return false;
+                }
+            }
+
             while (i < len && (isalnum(infixa[i]) || infixa[i] == '.'))
             {
                 i++;
@@ -336,15 +364,14 @@ bool validarExpressao(const char *infixa)
         }
         else if (eOperador(c))
         {
-            /* PERMISSÃO DE UNÁRIO: se for '-' ou '+' no início ou após '(', é um sinal unário */
             if ((c == '-' || c == '+') && ultimoFoiOperador)
             {
-                // É um operador unário válido, mantém ultimoFoiOperador como true
+                // Operador unário permitido
             }
             else if (ultimoFoiOperador)
             {
                 liberarPilha(&p);
-                return false; // Dois operadores binários seguidos (ex: 2 ++ 3)
+                return false; // Dois operadores binários seguidos
             }
             else
             {
@@ -354,7 +381,7 @@ bool validarExpressao(const char *infixa)
         else
         {
             liberarPilha(&p);
-            return false; // Caractere inválido
+            return false;
         }
     }
 
@@ -455,4 +482,39 @@ bool avaliarPosfixa(const char *posfixa, double *resultado)
 
     liberarPilha(&p);
     return ok;
+}
+
+void inserirExpressao(NoExpressao **lista, const char *expr)
+{
+    NoExpressao *novo = (NoExpressao *)malloc(sizeof(NoExpressao));
+    if (novo == NULL)
+        return;
+
+    strcpy(novo->expressao, expr);
+    novo->prox = NULL;
+
+    if (*lista == NULL)
+    {
+        *lista = novo;
+    }
+    else
+    {
+        NoExpressao *atual = *lista;
+        while (atual->prox != NULL)
+        {
+            atual = atual->prox;
+        }
+        atual->prox = novo;
+    }
+}
+
+void liberarListaExpressoes(NoExpressao *lista)
+{
+    NoExpressao *atual = lista;
+    while (atual != NULL)
+    {
+        NoExpressao *temp = atual;
+        atual = atual->prox;
+        free(temp);
+    }
 }
