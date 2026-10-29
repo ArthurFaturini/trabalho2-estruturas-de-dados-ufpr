@@ -3,25 +3,12 @@
 
 #include <stdbool.h>
 
-/* Enum para diferenciar se o nó guarda um operador/caractere ou um número */
-typedef enum
-{
-    TIPO_CHAR,
-    TIPO_DOUBLE
-} TipoDado;
-
-/* Conteúdo flexível do nó */
-typedef union
-{
-    char carac;
-    double numero;
-} Dado;
-
 /* Struct do nó encadeado */
 typedef struct NoPilha
 {
-    Dado dado;
-    TipoDado tipo;
+    char carac;    // Guarda operador/caractere se tipo == 0
+    double numero; // Guarda valor numérico se tipo == 1
+    int tipo;      // 0 para char, 1 para double
     struct NoPilha *prox;
 } NoPilha;
 
