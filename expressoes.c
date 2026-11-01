@@ -2,9 +2,28 @@
 #include <stdlib.h>
 #include <string.h>
 #include <ctype.h>
-#include <math.h>
 #include "pilha.h"
 #include "expressoes.h"
+
+/* Função própria para substituir o pow() da <math.h> */
+double potencia(double base, int expoente)
+{
+    double resultado = 1.0;
+    int expAbs = (expoente < 0) ? -expoente : expoente;
+
+    int i;
+    for (i = 0; i < expAbs; i++)
+    {
+        resultado *= base;
+    }
+
+    if (expoente < 0)
+    {
+        return 1.0 / resultado;
+    }
+
+    return resultado;
+}
 
 /* Retorna a prioridade do operador */
 int precedencia(char op)
@@ -42,7 +61,8 @@ void inverterETrocarParenteses(const char *src, char *dest)
     int len = strlen(src);
     int k = 0;
 
-    for (int i = len - 1; i >= 0; i--)
+    int i;
+    for (i = len - 1; i >= 0; i--)
     {
         if (src[i] == '(')
         {
@@ -64,7 +84,8 @@ void inverterETrocarParenteses(const char *src, char *dest)
 void inverterString(char *str)
 {
     int len = strlen(str);
-    for (int i = 0; i < len / 2; i++)
+    int i;
+    for (i = 0; i < len / 2; i++)
     {
         char temp = str[i];
         str[i] = str[len - 1 - i];
@@ -302,7 +323,8 @@ bool validarExpressao(const char *infixa)
     bool ultimoFoiOperador = true;
     int qtdOperandos = 0;
 
-    for (int i = 0; i < len; i++)
+    int i;
+    for (i = 0; i < len; i++)
     {
         char c = infixa[i];
 
@@ -462,7 +484,7 @@ bool avaliarPosfixa(const char *posfixa, double *resultado)
                 res = op1 / op2;
                 break;
             case '^':
-                res = pow(op1, op2);
+                res = potencia(op1, (int)op2);
                 break;
             default:
                 liberarPilha(&p);

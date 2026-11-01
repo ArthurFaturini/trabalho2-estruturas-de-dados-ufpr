@@ -64,6 +64,7 @@ void menuPilha(void)
     char resultadoPosfixa[512];
     char resultadoPrefixa[512];
     int opcao = 0;
+    int contador = 1;
 
     limparTela();
     printf("=======================================================\n");
@@ -72,7 +73,6 @@ void menuPilha(void)
     printf("Digite as expressoes que deseja processar.\n");
     printf("Para encerrar e ir para o menu, digite 'FIM' ou aperte Enter.\n\n");
 
-    int contador = 1;
     while (1)
     {
         printf("Expressao #%d: ", contador);
@@ -82,7 +82,10 @@ void menuPilha(void)
         bufferEntrada[strcspn(bufferEntrada, "\n")] = '\0';
 
         /* Flag de parada */
-        if (strlen(bufferEntrada) == 0 || strcasecmp(bufferEntrada, "FIM") == 0)
+        if (strlen(bufferEntrada) == 0 ||
+            strcmp(bufferEntrada, "FIM") == 0 ||
+            strcmp(bufferEntrada, "fim") == 0 ||
+            strcmp(bufferEntrada, "Fim") == 0)
         {
             break;
         }

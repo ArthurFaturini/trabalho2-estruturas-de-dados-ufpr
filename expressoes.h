@@ -31,4 +31,7 @@ bool avaliarPosfixa(const char *posfixa, double *resultado);
 void inserirExpressao(NoExpressao **lista, const char *expr);
 void liberarListaExpressoes(NoExpressao *lista);
 
+/* Função própria de potenciação (substituta da pow da <math.h>) */
+double potencia(double base, int expoente);
+
 #endif // EXPRESSOES_H
