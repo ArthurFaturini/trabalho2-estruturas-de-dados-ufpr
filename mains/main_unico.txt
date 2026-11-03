@@ -1,3 +1,11 @@
+/*
+ * ===========================================================
+ *                           NOMES
+ *            ARTHUR FATURINI RANGEL DE PAULA ARAUJO
+ *            MARCIA KAMILA DE NAZARE FEITOSA RAMOS
+ * ===========================================================
+ */
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
