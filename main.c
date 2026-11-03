@@ -3,6 +3,8 @@
 #include <string.h>
 #include "pilha.h"
 #include "expressoes.h"
+#include "fila.h"
+#include "impressora.h"
 
 void menuPilha(void);
 void menuFila(void);
@@ -246,6 +248,13 @@ void menuPilha(void)
 void menuFila(void)
 {
     int opcao = 0;
+    int carregadas;
+    Fila entrada, fila0, fila1, fila2;
+
+    inicializarFila(&entrada);
+    inicializarFila(&fila0);
+    inicializarFila(&fila1);
+    inicializarFila(&fila2);
 
     do
     {
@@ -270,21 +279,35 @@ void menuFila(void)
         switch (opcao)
         {
         case 1:
-            printf("\n[Em desenvolvimento] Carregando 'solicitacoes.txt'...\n");
-            // TODO: Chamar funcao de leitura de TXT
+            // Esvazia as filas antes, para nao duplicar se carregar de novo
+            liberarFila(&entrada);
+            liberarFila(&fila0);
+            liberarFila(&fila1);
+            liberarFila(&fila2);
+
+            carregadas = carregarSolicitacoes("solicitacoes.txt", &entrada);
+            if (carregadas < 0)
+                printf("\nErro: nao foi possivel abrir 'solicitacoes.txt'.\n");
+            else
+                printf("\n%d solicitacoes carregadas na Fila de Entrada.\n", carregadas);
             pausar();
             break;
         case 2:
-            printf("\n[Em desenvolvimento] Processando lotes de 5 solicitacoes...\n");
-            // TODO: Chamar funcao de simulacao de prioridades
+            if (filaVazia(&entrada))
+                printf("\nA Fila de Entrada esta vazia. Use a opcao 1 primeiro.\n");
+            else
+                simularDistribuicao(&entrada, &fila0, &fila1, &fila2);
             pausar();
             break;
         case 3:
-            printf("\n[Em desenvolvimento] Exibindo estado das filas...\n");
-            // TODO: Chamar funcao de impressao de tela
+            exibirFilas(&entrada, &fila0, &fila1, &fila2);
             pausar();
             break;
         case 4:
+            liberarFila(&entrada);
+            liberarFila(&fila0);
+            liberarFila(&fila1);
+            liberarFila(&fila2);
             printf("\nVoltando ao menu principal...\n");
             break;
         default:
