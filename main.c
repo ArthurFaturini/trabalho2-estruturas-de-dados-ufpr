@@ -275,6 +275,8 @@ void menuFila(void)
                 ;
             opcao = -1;
         }
+        while (getchar() != '\n')
+            ;
 
         switch (opcao)
         {
